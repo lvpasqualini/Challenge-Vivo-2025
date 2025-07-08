@@ -10,12 +10,12 @@ const Navbar = () => {
           <h2><b>Onboarding</b></h2>
         </div>
       </a>
-      <ul className="flex space-x-4 ">
-        <li className="hover:underline">Início</li>
-        <li className="hover:underline">Primeiro dia</li>
-        <li className="hover:underline">Conheça a vivo</li>
-        <li className="hover:underline">Cultura e pessoas</li>
-        <li className="hover:underline">Benefícios e ferramentas</li>
+      <ul className="flex space-x-4">
+        <li className="hover:underline"><a href="/home">Início</a></li>
+        <li className="hover:underline"><a href="/primeiro-dia">Primeiro dia</a></li>
+        <li className="hover:underline"><a href="/conheca-a-vivo">Conheça a vivo</a></li>
+        <li className="hover:underline"><a href="/cultura-e-pessoas">Cultura e pessoas</a></li>
+        <li className="hover:underline"><a href="/beneficios-e-ferramentas">Benefícios e ferramentas</a></li>
       </ul>
       <a className="flex items-center" href="">
         <LogIn/>
