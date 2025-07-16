@@ -3,7 +3,7 @@ import {LogIn} from "lucide-react";
 const Navbar = () => {
   return (
     <nav className="text-[#660099] flex items-center justify-between bg-white p-5 shadow-md">
-      <a className="flex font-bold" href="/">
+      <a className="flex font-bold" href="/home">
         <img className="w-[2.5rem] h-[2.5rem] object-contain" src="../../public/teste.png" alt="icon da vivo"/>
         <div className="flex-col">
           <h2><b>VIVO</b></h2>

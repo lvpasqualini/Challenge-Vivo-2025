@@ -1,6 +1,6 @@
-import Button from "../../components/Button";
-import Card from "../../components/Card";
-import { SquareUserRound, Bot , Handshake , ChartNoAxesCombined } from "lucide-react";
+import Button from "../../components/Button"
+import CardIcon from "../../components/CardIcon"
+import { SquareUserRound, Bot , Handshake , ChartNoAxesCombined } from "lucide-react"
 
 export default function PrimeiroDia() {
   return (
@@ -23,20 +23,20 @@ export default function PrimeiroDia() {
 
         <section className="w-full max-w-4xl">
           <div className="flex flex-row justify-evenly">
-            <Card
+            <CardIcon
               icon={<SquareUserRound className="w-12 h-12 text-[#660099] mb-2" />}
               title="Converse com seu gestor"
             />
-            <Card
+            <CardIcon
               icon={<Bot className="w-12 h-12 text-[#660099] mb-2" />}
               title="ChatBot para dúvidas"
             />
-            <Card
+            <CardIcon
               icon={<ChartNoAxesCombined className="w-12 h-12 text-[#660099] mb-2" />}
               title="Acompanhe sua evolução"
             />
             
-            <Card
+            <CardIcon
               icon={<Handshake className="w-12 h-12 text-[#660099] mb-2" />}
               title="Conheça sua equipe"
             />

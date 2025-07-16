@@ -8,4 +8,8 @@ export type CardProps = {
   icon?: React.ReactNode
 }
 
-
+export interface ContainerProps {
+    children?: React.ReactNode
+    className?: string
+    variant?: 'default' | 'full' | 'fixed' | 'responsive'
+}
