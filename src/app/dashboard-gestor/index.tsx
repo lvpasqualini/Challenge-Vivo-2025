@@ -1,27 +1,37 @@
-import Container from '../../components/Container'
+
 
 export default function DashboardGestor() {
+    const equipe = [
+        {
+            name: "Marcos Antônio",
+            profession : "QA",
+            progress: 60,
+        },
+        {
+            name: "Fábio Junior",
+            profession : "Engenheiro de software",
+            progress: 30,
+        },
+        {
+            name: "Ana Maria",
+            profession : "QA",
+            progress: 50,
+        },
+        {
+            name: "Carolina Mendes",
+            profession : "Banco de Dados",
+            progress: 0,
+        },
+    ]
+
     return (
         <div className="p-6 space-y-4 flex gap-2">
             <section>
-                <Container>
-                    <h2 className='font-semibold'>Quests da equipe</h2>
-                    <div>
-                        <h1>temos que fazer o tudo list</h1>
-                    </div>
-                </Container>
+               
             </section>
 
-            <section className='grid grid-flow-col grid-rows-4'>
-                <Container>
-                    01
-                </Container>
-                <Container>
-                    02
-                </Container>
-                <Container>
-
-                </Container>
+            <section className='grid grid-flow-col grid-rows-2 grid-cols-2 gap-3'>
+                
             </section>
         </div>
     )
