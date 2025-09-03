@@ -28,7 +28,7 @@ const Navbar = () => {
           {/* Menu Desktop */}
           <div className="hidden lg:flex">
             <ul className="flex space-x-6">
-              <li><a href="/home" className="hover:underline hover:text-[#550088] transition-colors">Início</a></li>
+              <li><a href="/" className="hover:underline hover:text-[#550088] transition-colors">Início</a></li>
               <li><a href="/primeiro-dia" className="hover:underline hover:text-[#550088] transition-colors">Primeiro dia</a></li>
               <li><a href="/conheca-a-vivo" className="hover:underline hover:text-[#550088] transition-colors">Conheça a vivo</a></li>
               <li><a href="/cultura-e-pessoas" className="hover:underline hover:text-[#550088] transition-colors">Cultura e pessoas</a></li>

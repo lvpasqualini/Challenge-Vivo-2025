@@ -5,7 +5,7 @@ import { SquareUserRound, Bot , Handshake , ChartNoAxesCombined } from "lucide-r
 export default function PrimeiroDia() {
   return (
     <div className="min-h-screen flex flex-col">
-      <main className="min-h-[90vh] flex flex-col items-center justify-center px-4 py-8 gap-6 md:gap-8 border-b-2 border-[#660099]">
+      <main className="min-h-[90vh] flex flex-col items-center justify-center px-4 py-8 gap-6 md:gap-8">
         <section>
           <h1 className="text-2xl mb-5 md:text-4xl lg:text-3xl text-[#660099] font-semilight text-center leading-tight max-w-4xl">
             Primeiro dia
@@ -21,8 +21,8 @@ export default function PrimeiroDia() {
           </p>
         </section>
 
-        <section className="w-full max-w-4xl">
-          <div className="flex flex-row justify-evenly">
+        <section className="max-w-4xl">
+          <div className="grid grid-rows-1 grid-cols-4 justify-center gap-20 pt-8 max-sm:grid-rows-2 max-sm:grid-cols-2 max-sm:gap-8">
             <CardIcon
               icon={<SquareUserRound className="w-12 h-12 text-[#660099] mb-2" />}
               title="Converse com seu gestor"
@@ -46,7 +46,7 @@ export default function PrimeiroDia() {
         <Button onClick={() => alert("Apenas para teste")}>
           Inicie sua jornada
         </Button>
-        <div className="w-3xl border-t-2 border-[#660099]"></div>
+        <div className="w-[80%] border-t-2 border-[#660099]"></div>
       </main>
     </div>
   )

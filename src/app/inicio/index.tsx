@@ -23,7 +23,7 @@ export default function Inicio() {
                     Cada ideia, cada passo, cada colaboração importa. Estamos muito felizes por ter você com a gente."
                 </p>
                 
-                <Button onClick={() => alert("oi bia")}>
+                <Button onClick={() => alert("oi")}>
                     Inicie sua jornada
                 </Button>
             </main>
