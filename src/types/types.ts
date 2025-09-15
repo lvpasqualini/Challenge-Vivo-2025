@@ -13,3 +13,18 @@ export interface ContainerProps {
     className?: string
     variant?: 'default' | 'full' | 'fixed' | 'responsive'
 }
+
+export interface Tarefa {
+  descricao : string
+  dataFim: Date
+  idFuncionario : number
+}
+
+export interface Treinamento {
+  nome : string
+  descricao : string
+  cargaHoraria : number
+  categoria : string
+  dataFim : Date
+  idFuncionario : number
+}
