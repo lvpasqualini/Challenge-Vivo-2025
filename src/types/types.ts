@@ -15,9 +15,11 @@ export interface ContainerProps {
 }
 
 export interface Tarefa {
-  descricao : string
-  dataFim: Date
-  idFuncionario : number
+  id?: number
+  descricao: string
+  dataInicio?: string
+  dataFim: Date | string
+  idFuncionario: number
 }
 
 export interface Treinamento {

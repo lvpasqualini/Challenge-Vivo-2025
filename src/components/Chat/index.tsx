@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { inicializaChat, enviarMensagem } from '../../chatbot/chatbot';
 
 interface Message {
   id: number;
@@ -9,47 +10,77 @@ interface Message {
 
 export default function Chat() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      text: "Olá! Como posso ajudá-lo hoje?",
-      sender: 'bot',
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Inicializar o chat quando o componente monta
+  useEffect(() => {
+    inicializaChat();
+    // Adicionar mensagem de boas-vindas
+    setMessages([
+      {
+        id: 1,
+        text: "Olá! Eu sou o Vitu, assistente virtual da Vivo! 😊\n\nComo posso te ajudar hoje? Posso esclarecer dúvidas sobre:\n🎵 Benefícios como Vivo Play e Vivo Music\n📞 Atendimento e suporte\n\nO que você gostaria de saber?",
+        sender: 'bot',
+        timestamp: new Date()
+      }
+    ]);
+  }, []);
+
+  // Auto scroll para a última mensagem
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const toggleChat = () => {
     setIsOpen(!isOpen);
   };
 
-  const sendMessage = () => {
-    if (inputMessage.trim() === '') return;
+  const sendMessage = async () => {
+    if (inputMessage.trim() === '' || isLoading) return;
 
-    const newMessage: Message = {
+    const userMessage: Message = {
       id: messages.length + 1,
       text: inputMessage,
       sender: 'user',
       timestamp: new Date()
     };
 
-    setMessages([...messages, newMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
+    setIsLoading(true);
 
-    // Simular resposta do bot após 1 segundo
-    setTimeout(() => {
-      const botResponse: Message = {
+    try {
+      // Enviar mensagem para o Gemini AI
+      const botResponse = await enviarMensagem(inputMessage);
+      
+      const botMessage: Message = {
         id: messages.length + 2,
-        text: "Obrigado pela sua mensagem! Nossa equipe entrará em contato em breve.",
+        text: botResponse,
         sender: 'bot',
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, botResponse]);
-    }, 1000);
+
+      setMessages(prev => [...prev, botMessage]);
+    } catch (error) {
+      console.error('Erro ao enviar mensagem:', error);
+      const errorMessage: Message = {
+        id: messages.length + 2,
+        text: "Desculpe, ocorreu um erro. Tente novamente em alguns instantes.",
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
       sendMessage();
     }
   };
@@ -100,7 +131,7 @@ export default function Chat() {
                     ? 'bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-br-sm' 
                     : 'bg-white text-gray-800 border border-gray-200 rounded-bl-sm'
                 }`}>
-                  <p className="text-sm leading-relaxed">{message.text}</p>
+                  <p className="text-sm leading-relaxed whitespace-pre-line">{message.text}</p>
                   <span className={`text-xs opacity-70 block mt-1 ${
                     message.sender === 'user' ? 'text-purple-100' : 'text-gray-500'
                   }`}>
@@ -112,25 +143,49 @@ export default function Chat() {
                 </div>
               </div>
             ))}
+            
+            {/* Indicador de loading */}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="bg-white text-gray-800 border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-2">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                    <span className="text-xs text-gray-500">Vitu está digitando...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Input de mensagem */}
           <div className="p-4 bg-white border-t border-gray-200 flex gap-2">
             <input
               type="text"
-              placeholder="Digite sua mensagem..."
+              placeholder={isLoading ? "Vitu está digitando..." : "Digite sua mensagem..."}
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-full outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 text-sm"
+              disabled={isLoading}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-full outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
             <button 
               onClick={sendMessage}
-              className="w-10 h-10 bg-gradient-to-r from-purple-600 to-purple-800 rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+              disabled={isLoading || inputMessage.trim() === ''}
+              className="w-10 h-10 bg-gradient-to-r from-purple-600 to-purple-800 rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
             </button>
           </div>
         </div>

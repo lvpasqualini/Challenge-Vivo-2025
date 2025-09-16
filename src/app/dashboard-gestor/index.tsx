@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Users, UserPlus, Activity, CheckCircle } from 'lucide-react';
+import { Users, UserPlus, CheckCircle, BookOpen, Wifi } from 'lucide-react';
+import { createTarefa, createTreinamento, testConnection } from '../../lib/api';
+import type { Tarefa, Treinamento } from '../../types/types';
 
 interface TeamMember {
   id: number;
@@ -19,28 +21,28 @@ interface TaskCategory {
 const DashboardGestor: React.FC = () => {
   const [teamMembers] = useState<TeamMember[]>([
     {
-      id: 1,
+      id: 63,
       name: 'Marcos Antônio',
       role: 'QA',
       progress: 80,
       status: 'active'
     },
     {
-      id: 2,
+      id: 64,
       name: 'Fábio Júnior',
       role: 'Engenheiro de Software',
       progress: 30,
       status: 'active'
     },
     {
-      id: 3,
+      id: 62,
       name: 'Ana Maria',
       role: 'QA',
       progress: 60,
       status: 'active'
     },
     {
-      id: 4,
+      id: 65,
       name: 'Carolina Mendes',
       role: 'Banco de Dados',
       progress: 0,
@@ -48,7 +50,8 @@ const DashboardGestor: React.FC = () => {
     }
   ]);
 
-  const [tasks] = useState<TaskCategory[]>([
+  // Estados para gerenciar tarefas e treinamentos
+  const [tasks, setTasks] = useState<TaskCategory[]>([
     { id: 1, name: 'Ana Maria', completed: true, assignee: 'Ana Maria' },
     { id: 2, name: 'Nicoli Silva', completed: true, assignee: 'Nicoli Silva' },
     { id: 3, name: 'Marcos Antonio', completed: true, assignee: 'Marcos Antônio'  },
@@ -56,12 +59,117 @@ const DashboardGestor: React.FC = () => {
     { id: 5, name: 'Carolina Mendes', completed: false, assignee: 'Carolina Mendes' }
   ]);
 
-  const [trainingTasks] = useState<TaskCategory[]>([
+  const [trainingTasks, setTrainingTasks] = useState<TaskCategory[]>([
     { id: 1, name: 'Ana Maria', completed: true },
     { id: 2, name: 'Nicoli Silva', completed: true },
     { id: 3, name: 'Marcos Antônio', completed: true },
     { id: 4, name: 'Fábio Júnior', completed: true }
   ]);
+
+  // Estados para modais
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showTrainingModal, setShowTrainingModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Estados para formulários
+  const [newTask, setNewTask] = useState<Tarefa>({
+    descricao: '',
+    dataFim: new Date().toISOString().split('T')[0],
+    idFuncionario: 0
+  });
+
+  const [newTraining, setNewTraining] = useState<Treinamento>({
+    nome: '',
+    descricao: '',
+    cargaHoraria: 0,
+    categoria: '',
+    dataFim: new Date(),
+    idFuncionario: 0
+  });
+
+  // Função para criar nova tarefa
+  const handleCreateTask = async () => {
+    if (!newTask.descricao || !newTask.idFuncionario) {
+      alert('Por favor, preencha todos os campos obrigatórios!');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log('Enviando tarefa:', newTask);
+      
+      const response = await createTarefa(newTask);
+      console.log('Resposta da API:', response);
+      
+      // Adicionar à lista local
+      const newTaskItem: TaskCategory = {
+        id: tasks.length + 1,
+        name: teamMembers.find(m => m.id === newTask.idFuncionario)?.name || 'Funcionário',
+        completed: false,
+        assignee: teamMembers.find(m => m.id === newTask.idFuncionario)?.name
+      };
+      
+      setTasks([...tasks, newTaskItem]);
+      setShowTaskModal(false);
+      setNewTask({ descricao: '', dataFim: new Date().toISOString().split('T')[0], idFuncionario: 0 });
+      alert('Tarefa criada com sucesso!');
+    } catch (error: any) {
+      console.error('Erro completo:', error);
+      
+      let errorMessage = 'Erro ao criar tarefa: ';
+      
+      if (error.userMessage) {
+        errorMessage += error.userMessage;
+      } else if (error.code === 'ERR_NETWORK') {
+        errorMessage += 'Erro de rede. Verifique sua conexão e se o servidor está rodando.';
+      } else if (error.code === 'ECONNREFUSED') {
+        errorMessage += 'Servidor não está respondendo. Verifique se está rodando na porta 8080.';
+      } else {
+        errorMessage += error?.message || 'Erro desconhecido.';
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Função para criar novo treinamento
+  const handleCreateTraining = async () => {
+    if (!newTraining.nome || !newTraining.descricao || !newTraining.idFuncionario) {
+      alert('Por favor, preencha todos os campos obrigatórios!');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await createTreinamento(newTraining);
+      
+      // Adicionar à lista local
+      const newTrainingItem: TaskCategory = {
+        id: trainingTasks.length + 1,
+        name: teamMembers.find(m => m.id === newTraining.idFuncionario)?.name || 'Funcionário',
+        completed: false
+      };
+      
+      setTrainingTasks([...trainingTasks, newTrainingItem]);
+      setShowTrainingModal(false);
+      setNewTraining({ 
+        nome: '', 
+        descricao: '', 
+        cargaHoraria: 0, 
+        categoria: '', 
+        dataFim: new Date(), 
+        idFuncionario: 0 
+      });
+      alert('Treinamento criado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao criar treinamento:', error);
+      alert('Erro ao criar treinamento. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const completedTasks = tasks.filter(task => task.completed).length;
   const totalTasks = tasks.length;
@@ -159,10 +267,23 @@ const DashboardGestor: React.FC = () => {
             </div>
 
             {/* New Task Button */}
-            <button className="w-full bg-[#660099] text-white py-3 px-4 rounded-lg font-semibold hover:bg-purple-800 transition-colors flex items-center justify-center gap-2">
-              <UserPlus className="w-5 h-5" />
-              Nova tarefa
-            </button>
+            <div className="space-y-3">
+              <button 
+                onClick={() => setShowTaskModal(true)}
+                className="w-full bg-[#660099] text-white py-3 px-4 rounded-lg font-semibold hover:bg-purple-800 transition-colors flex items-center justify-center gap-2"
+              >
+                <UserPlus className="w-5 h-5" />
+                Nova tarefa
+              </button>
+              
+              <button 
+                onClick={() => setShowTrainingModal(true)}
+                className="w-full bg-[#660099] text-white py-3 px-4 rounded-lg font-semibold hover:bg-purple-800 transition-colors flex items-center justify-center gap-2"
+              >
+                <BookOpen className="w-5 h-5" />
+                Novo treinamento
+              </button>
+            </div>
           </div>
 
 
@@ -299,6 +420,193 @@ const DashboardGestor: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal para Nova Tarefa */}
+      {showTaskModal && (
+        <div className="fixed inset-0 bg-black/50  flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-xl font-bold mb-4 text-purple-900">Nova Tarefa</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Descrição da Tarefa *
+                </label>
+                <textarea
+                  value={newTask.descricao}
+                  onChange={(e) => setNewTask({...newTask, descricao: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  rows={3}
+                  placeholder="Descreva a tarefa..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Funcionário *
+                </label>
+                <select
+                  value={newTask.idFuncionario}
+                  onChange={(e) => setNewTask({...newTask, idFuncionario: Number(e.target.value)})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value={0}>Selecione um funcionário</option>
+                  {teamMembers.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name} - {member.role}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Data de Conclusão *
+                </label>
+                <input
+                  type="date"
+                  value={typeof newTask.dataFim === 'string' ? newTask.dataFim : newTask.dataFim.toISOString().split('T')[0]}
+                  onChange={(e) => setNewTask({...newTask, dataFim: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowTaskModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                disabled={loading}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCreateTask}
+                disabled={loading}
+                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+              >
+                {loading ? 'Criando...' : 'Criar Tarefa'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para Novo Treinamento */}
+      {showTrainingModal && (
+        <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold mb-4 text-purple-900">Novo Treinamento</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nome do Treinamento *
+                </label>
+                <input
+                  type="text"
+                  value={newTraining.nome}
+                  onChange={(e) => setNewTraining({...newTraining, nome: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Ex: Treinamento de Segurança"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Descrição *
+                </label>
+                <textarea
+                  value={newTraining.descricao}
+                  onChange={(e) => setNewTraining({...newTraining, descricao: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  rows={3}
+                  placeholder="Descreva o treinamento..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Carga Horária (horas)
+                </label>
+                <input
+                  type="number"
+                  value={newTraining.cargaHoraria}
+                  onChange={(e) => setNewTraining({...newTraining, cargaHoraria: Number(e.target.value)})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Ex: 8"
+                  min="0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Categoria
+                </label>
+                <select
+                  value={newTraining.categoria}
+                  onChange={(e) => setNewTraining({...newTraining, categoria: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="">Selecione uma categoria</option>
+                  <option value="Segurança">Segurança</option>
+                  <option value="Técnico">Técnico</option>
+                  <option value="Soft Skills">Soft Skills</option>
+                  <option value="Compliance">Compliance</option>
+                  <option value="Produto">Produto</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Funcionário *
+                </label>
+                <select
+                  value={newTraining.idFuncionario}
+                  onChange={(e) => setNewTraining({...newTraining, idFuncionario: Number(e.target.value)})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value={0}>Selecione um funcionário</option>
+                  {teamMembers.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name} - {member.role}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Data de Conclusão *
+                </label>
+                <input
+                  type="date"
+                  value={newTraining.dataFim.toISOString().split('T')[0]}
+                  onChange={(e) => setNewTraining({...newTraining, dataFim: new Date(e.target.value)})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowTrainingModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                disabled={loading}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCreateTraining}
+                disabled={loading}
+                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+              >
+                {loading ? 'Criando...' : 'Criar Treinamento'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
