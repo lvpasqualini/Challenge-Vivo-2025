@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Users, UserPlus, CheckCircle, BookOpen, Wifi } from 'lucide-react';
-import { createTarefa, createTreinamento, testConnection } from '../../lib/api';
+import React, { useState, useEffect } from 'react';
+import { Users, UserPlus, BookOpen } from 'lucide-react';
+import { createTarefa, createTreinamento, createTarefaFuncionario, getAllTarefas, getAllTreinamentos } from '../../lib/api';
 import type { Tarefa, Treinamento } from '../../types/types';
 
 interface TeamMember {
@@ -16,6 +16,9 @@ interface TaskCategory {
   name: string;
   completed: boolean;
   assignee?: string;
+  description?: string;
+  dateCreated?: string;
+  dueDate?: string;
 }
 
 const DashboardGestor: React.FC = () => {
@@ -42,7 +45,7 @@ const DashboardGestor: React.FC = () => {
       status: 'active'
     },
     {
-      id: 65,
+      id: 8,
       name: 'Carolina Mendes',
       role: 'Banco de Dados',
       progress: 0,
@@ -51,25 +54,83 @@ const DashboardGestor: React.FC = () => {
   ]);
 
   // Estados para gerenciar tarefas e treinamentos
-  const [tasks, setTasks] = useState<TaskCategory[]>([
-    { id: 1, name: 'Ana Maria', completed: true, assignee: 'Ana Maria' },
-    { id: 2, name: 'Nicoli Silva', completed: true, assignee: 'Nicoli Silva' },
-    { id: 3, name: 'Marcos Antonio', completed: true, assignee: 'Marcos Antônio'  },
-    { id: 4, name: 'Fábio Júnior', completed: false, assignee: 'Fábio Júnior' },
-    { id: 5, name: 'Carolina Mendes', completed: false, assignee: 'Carolina Mendes' }
-  ]);
+  const [tasks, setTasks] = useState<TaskCategory[]>([]);
 
-  const [trainingTasks, setTrainingTasks] = useState<TaskCategory[]>([
-    { id: 1, name: 'Ana Maria', completed: true },
-    { id: 2, name: 'Nicoli Silva', completed: true },
-    { id: 3, name: 'Marcos Antônio', completed: true },
-    { id: 4, name: 'Fábio Júnior', completed: true }
-  ]);
+  const [trainingTasks, setTrainingTasks] = useState<TaskCategory[]>([]);
 
   // Estados para modais
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showTrainingModal, setShowTrainingModal] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Função para carregar tarefas do backend
+  const loadTasksFromBackend = async () => {
+    try {
+      console.log('🔄 Carregando tarefas do backend...');
+      const tarefasData = await getAllTarefas();
+      
+      if (tarefasData && Array.isArray(tarefasData)) {
+        // Converter dados do backend para o formato do frontend
+        const formattedTasks: TaskCategory[] = tarefasData.map((tarefa: any) => ({
+          id: tarefa.id,
+          name: `Tarefa #${tarefa.id}`,
+          completed: false, // Você pode ajustar isso baseado no status real
+          assignee: tarefa.funcionario?.nome || 'Não atribuído',
+          description: tarefa.descricao,
+          dateCreated: new Date(tarefa.dataInicio).toLocaleDateString('pt-BR'),
+          dueDate: new Date(tarefa.dataFim).toLocaleDateString('pt-BR')
+        }));
+        
+        setTasks(formattedTasks);
+        console.log('✅ Tarefas carregadas:', formattedTasks);
+      } else {
+        console.log('📝 Nenhuma tarefa encontrada');
+        setTasks([]);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao carregar tarefas:', error);
+      // Manter array vazio em caso de erro
+      setTasks([]);
+    }
+  };
+
+  // Função para carregar treinamentos do backend
+  const loadTrainingsFromBackend = async () => {
+    try {
+      console.log('🔄 Carregando treinamentos do backend...');
+      const treinamentosData = await getAllTreinamentos();
+      
+      if (treinamentosData && Array.isArray(treinamentosData)) {
+        // Converter dados do backend para o formato do frontend
+        const formattedTrainings: TaskCategory[] = treinamentosData.map((treinamento: any) => ({
+          id: treinamento.id,
+          name: treinamento.funcionario?.nome || 'Não atribuído',
+          completed: false, // Você pode ajustar isso baseado no status real
+          assignee: treinamento.funcionario?.nome || 'Não atribuído',
+          description: `${treinamento.nome} - ${treinamento.descricao}`,
+          dateCreated: new Date(treinamento.dataCriacao).toLocaleDateString('pt-BR'),
+          dueDate: new Date(treinamento.dataFim).toLocaleDateString('pt-BR')
+        }));
+        
+        setTrainingTasks(formattedTrainings);
+        console.log('✅ Treinamentos carregados:', formattedTrainings);
+      } else {
+        console.log('📝 Nenhum treinamento encontrado');
+        setTrainingTasks([]);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao carregar treinamentos:', error);
+      // Manter array vazio em caso de erro
+      setTrainingTasks([]);
+    }
+  };
+
+  // useEffect para carregar dados do backend quando o componente montar
+  useEffect(() => {
+    console.log('🚀 Componente montado - carregando dados do backend');
+    loadTasksFromBackend();
+    loadTrainingsFromBackend();
+  }, []);
 
   // Estados para formulários
   const [newTask, setNewTask] = useState<Tarefa>({
@@ -77,6 +138,28 @@ const DashboardGestor: React.FC = () => {
     dataFim: new Date().toISOString().split('T')[0],
     idFuncionario: 0
   });
+
+  const [selectedEmployees, setSelectedEmployees] = useState<number[]>([]);
+
+  // Função para gerenciar seleção de funcionários
+  const toggleEmployeeSelection = (employeeId: number) => {
+    setSelectedEmployees(prev => 
+      prev.includes(employeeId)
+        ? prev.filter(id => id !== employeeId)
+        : [...prev, employeeId]
+    );
+  };
+
+  const selectAllEmployees = () => {
+    const activeEmployeeIds = teamMembers
+      .filter(member => member.status === 'active')
+      .map(member => member.id);
+    setSelectedEmployees(activeEmployeeIds);
+  };
+
+  const clearEmployeeSelection = () => {
+    setSelectedEmployees([]);
+  };
 
   const [newTraining, setNewTraining] = useState<Treinamento>({
     nome: '',
@@ -89,42 +172,100 @@ const DashboardGestor: React.FC = () => {
 
   // Função para criar nova tarefa
   const handleCreateTask = async () => {
-    if (!newTask.descricao || !newTask.idFuncionario) {
-      alert('Por favor, preencha todos os campos obrigatórios!');
+    if (!newTask.descricao || selectedEmployees.length === 0) {
+      alert('Por favor, preencha todos os campos obrigatórios e selecione pelo menos um funcionário!');
       return;
     }
 
     try {
       setLoading(true);
-      console.log('Enviando tarefa:', newTask);
+      console.log('=== INICIANDO CRIAÇÃO DE TAREFA ===');
+      console.log('Dados da tarefa original:', newTask);
+      console.log('Funcionários selecionados:', selectedEmployees);
       
-      const response = await createTarefa(newTask);
-      console.log('Resposta da API:', response);
-      
-      // Adicionar à lista local
-      const newTaskItem: TaskCategory = {
-        id: tasks.length + 1,
-        name: teamMembers.find(m => m.id === newTask.idFuncionario)?.name || 'Funcionário',
-        completed: false,
-        assignee: teamMembers.find(m => m.id === newTask.idFuncionario)?.name
+      // Primeiro, criar a tarefa da forma tradicional (com o primeiro funcionário selecionado como responsável principal)
+      const tarefaParaCriar = {
+        ...newTask,
+        idFuncionario: selectedEmployees[0] // Primeiro funcionário como responsável principal
       };
       
-      setTasks([...tasks, newTaskItem]);
+      console.log('Etapa 1: Criando tarefa principal...');
+      console.log('Dados da tarefa a ser criada:', tarefaParaCriar);
+      
+      const response = await createTarefa(tarefaParaCriar);
+      console.log('✅ Tarefa principal criada com sucesso:', response);
+      
+      // Verificar se obtivemos um ID válido
+      const tarefaId = response?.id || response;
+      if (!tarefaId) {
+        throw new Error('ID da tarefa não foi retornado pelo servidor');
+      }
+      console.log('ID da tarefa obtido:', tarefaId);
+      
+      // Etapa 2: Criar os relacionamentos TarefaFuncionario para TODOS os funcionários selecionados
+      console.log('Etapa 2: Criando relacionamentos TarefaFuncionario...');
+      const associacoes = [];
+      
+      for (let i = 0; i < selectedEmployees.length; i++) {
+        const funcionarioId = selectedEmployees[i];
+        const tarefaFuncionario = {
+          id_tarefa: tarefaId,
+          id_funcionario: funcionarioId,
+          status_tarefa: 0 // 0 = não iniciada, 1 = em progresso, 2 = concluída
+        };
+        
+        console.log(`Criando relacionamento ${i + 1}/${selectedEmployees.length}:`, tarefaFuncionario);
+        
+        try {
+          const associacao = await createTarefaFuncionario(tarefaFuncionario);
+          console.log(`✅ Relacionamento ${i + 1} criado:`, associacao);
+          associacoes.push(associacao);
+        } catch (assocError: any) {
+          console.error(`❌ Erro no relacionamento ${i + 1}:`, assocError);
+          // Não falhar completamente se um relacionamento falhar
+          console.warn(`Continuando apesar do erro no relacionamento com funcionário ${funcionarioId}`);
+        }
+      }
+      
+      console.log(`✅ ${associacoes.length}/${selectedEmployees.length} relacionamentos criados com sucesso`);
+      
+      // Recarregar a lista de tarefas do backend
+      await loadTasksFromBackend();
+      
       setShowTaskModal(false);
       setNewTask({ descricao: '', dataFim: new Date().toISOString().split('T')[0], idFuncionario: 0 });
-      alert('Tarefa criada com sucesso!');
+      setSelectedEmployees([]);
+      
+      console.log('=== TAREFA E RELACIONAMENTOS CRIADOS COM SUCESSO ===');
+      alert(`✅ Tarefa criada com sucesso!\n• Tarefa ID: ${tarefaId}\n• Atribuída a ${selectedEmployees.length} funcionário(s)\n• Relacionamentos criados: ${associacoes.length}/${selectedEmployees.length}`);
     } catch (error: any) {
+      console.error('=== ERRO NA CRIAÇÃO DA TAREFA ===');
       console.error('Erro completo:', error);
+      console.error('Stack trace:', error?.stack);
       
       let errorMessage = 'Erro ao criar tarefa: ';
       
-      if (error.userMessage) {
-        errorMessage += error.userMessage;
-      } else if (error.code === 'ERR_NETWORK') {
-        errorMessage += 'Erro de rede. Verifique sua conexão e se o servidor está rodando.';
-      } else if (error.code === 'ECONNREFUSED') {
-        errorMessage += 'Servidor não está respondendo. Verifique se está rodando na porta 8080.';
+      if (error.response) {
+        // Erro da API
+        console.error('Erro da API:', error.response);
+        console.error('Status:', error.response.status);
+        console.error('Data:', error.response.data);
+        
+        if (error.response.status === 500) {
+          errorMessage += 'Erro interno do servidor. Verifique os logs do backend.';
+        } else if (error.response.status === 404) {
+          errorMessage += 'Endpoint não encontrado. Verifique se a API está rodando corretamente.';
+        } else if (error.response.status === 400) {
+          errorMessage += `Dados inválidos: ${error.response.data?.message || 'Verifique os dados enviados'}`;
+        } else {
+          errorMessage += `Erro HTTP ${error.response.status}: ${error.response.data?.message || error.message}`;
+        }
+      } else if (error.request) {
+        // Erro de rede
+        console.error('Erro de rede:', error.request);
+        errorMessage += 'Erro de conexão. Verifique se o servidor está rodando na porta 8080.';
       } else {
+        // Outro erro
         errorMessage += error?.message || 'Erro desconhecido.';
       }
       
@@ -145,14 +286,9 @@ const DashboardGestor: React.FC = () => {
       setLoading(true);
       await createTreinamento(newTraining);
       
-      // Adicionar à lista local
-      const newTrainingItem: TaskCategory = {
-        id: trainingTasks.length + 1,
-        name: teamMembers.find(m => m.id === newTraining.idFuncionario)?.name || 'Funcionário',
-        completed: false
-      };
+      // Recarregar a lista de treinamentos do backend
+      await loadTrainingsFromBackend();
       
-      setTrainingTasks([...trainingTasks, newTrainingItem]);
       setShowTrainingModal(false);
       setNewTraining({ 
         nome: '', 
@@ -171,11 +307,6 @@ const DashboardGestor: React.FC = () => {
     }
   };
 
-  const completedTasks = tasks.filter(task => task.completed).length;
-  const totalTasks = tasks.length;
-  const completedTraining = trainingTasks.filter(task => task.completed).length;
-  const totalTraining = trainingTasks.length;
-
   const getProgressColor = (progress: number) => {
     if (progress >= 70) return 'bg-green-500';
     if (progress >= 40) return 'bg-yellow-500';
@@ -191,10 +322,15 @@ const DashboardGestor: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-3">
-          <h1 className="text-3xl font-bold text-purple-900 mb-2">ÁREA DO GESTOR</h1>
-          <div className="flex items-center justify-center gap-2 text-gray-600 w-50px h-10">
-            <Users/>
-            <span>Equipe</span>
+          <div className="flex items-center justify-center">
+            <div></div>
+            <div>
+              <h1 className="text-3xl font-bold text-purple-900 mb-2">ÁREA DO GESTOR</h1>
+              <div className="flex items-center justify-center gap-2 text-gray-600 w-50px h-10">
+                <Users/>
+                <span>Equipe</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -202,69 +338,28 @@ const DashboardGestor: React.FC = () => {
           {/* Left Panel - Task Management */}
           <div className="lg:col-span-1">
             {/* Ler Formulário */}
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            {tasks.map((task) => (
+               <div key={task.id} className="bg-white rounded-lg shadow-md p-6 mb-6">
               <div className="bg-[#660099] text-white p-3 rounded-t-lg -m-6 mb-4">
-                <h3 className="font-semibold">Ler Formulário</h3>
+                <h3 className="font-semibold">{task.description}</h3>
               </div>
               
               <div className="space-y-3">
-                {tasks.map((task) => (
-                  <div key={task.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                {teamMembers.map((member) => (
+                  <div key={member.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
                     <div className="flex items-center gap-3">
-                      <div className={`w-4 h-4 rounded-full ${task.completed ? 'bg-purple-800' : 'bg-gray-300'}`}>
-                        {task.completed && <CheckCircle className="w-4 h-4 text-white" />}
-                      </div>
-                      <span className={`text-sm ${task.completed ? 'text-gray-600' : 'text-gray-800'}`}>
-                        {task.name}
+                      <span className="text-sm text-gray-800">
+                        {member.name}
                       </span>
                     </div>
-                    <div className={`w-3 h-3 rounded-full ${task.completed ? 'bg-purple-800' : 'bg-gray-300'}`}></div>
+                    <div className="w-3 h-3 rounded-full bg-gray-300"></div>
                   </div>
                 ))}
               </div>
             </div>
-            
-            {/* Challenge Section */}
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <div className="bg-[#660099] text-white p-3 rounded-t-lg -m-6 mb-4">
-                <h3 className="font-semibold">Concluir Desafio</h3>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-2">
-                  <span className="text-sm">Ana Maria</span>
-                  <div className="w-3 h-3 rounded-full bg-purple-600"></div>
-                </div>
-                <div className="flex items-center justify-between p-2">
-                  <span className="text-sm">Nicoli Silva</span>
-                  <div className="w-3 h-3 rounded-full bg-purple-600"></div>
-                </div>
-                <div className="flex items-center justify-between p-2">
-                  <span className="text-sm">Marcos Antônio</span>
-                  <div className="w-3 h-3 rounded-full bg-gray-300"></div>
-                </div>
-                <div className="flex items-center justify-between p-2">
-                  <span className="text-sm">Fábio Júnior</span>
-                  <div className="w-3 h-3 rounded-full bg-gray-300"></div>
-                </div>
-              </div>
-            </div>
+            ))}
 
-            {/* Assistir Treinamento */}
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <div className="bg-[#660099] text-white p-3 rounded-t-lg -m-6 mb-4">
-                <h3 className="font-semibold">Assistir treinamento</h3>
-              </div>
-              
-              <div className="space-y-3">
-                {trainingTasks.map((task) => (
-                  <div key={task.id} className="flex items-center justify-between p-2">
-                    <span className="text-sm">{task.name}</span>
-                    <div className={`w-3 h-3 rounded-full ${task.completed ? 'bg-purple-800' : 'bg-gray-300'}`}></div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            
 
             {/* New Task Button */}
             <div className="space-y-3">
@@ -325,97 +420,69 @@ const DashboardGestor: React.FC = () => {
         <div className="mt-12">
           <h2 className="text-2xl font-bold text-center mb-8 text-gray-800">Relatório Geral:</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Formulário */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold mb-6 text-center">Ler formulário:</h3>
-              
-              <div className="relative w-48 h-48 mx-auto mb-4">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    stroke="#e5e7eb"
-                    strokeWidth="8"
-                    fill="transparent"
-                  />
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    stroke="#660099"
-                    strokeWidth="8"
-                    fill="transparent"
-                    strokeDasharray={`${(completedTasks / totalTasks) * 251.2} 251.2`}
-                    className="transition-all duration-500"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-700">
-                      {Math.round((completedTasks / totalTasks) * 100)}%
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {/* Cards dinâmicos das tarefas criadas */}
+            {tasks.map((task) => (
+              <div key={task.id} className="bg-white rounded-lg shadow-md p-6">
+                <h3 className="text-lg font-semibold mb-6 text-center">{task.description}</h3>
+                
+                <div className="relative w-32 h-32 mx-auto mb-4">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      stroke="#e5e7eb"
+                      strokeWidth="8"
+                      fill="transparent"
+                    />
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      stroke="#660099"
+                      strokeWidth="8"
+                      fill="transparent"
+                      strokeDasharray={`${task.completed ? 251.2 : 0} 251.2`}
+                      className="transition-all duration-500"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-purple-700">
+                        {task.completed ? '100%' : '0%'}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="flex justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-purple-600"></div>
-                  <span>Concluídos</span>
+                
+                <div className="flex justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-purple-600"></div>
+                    <span>Concluída</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-gray-300"></div>
+                    <span>Pendente</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-gray-300"></div>
-                  <span>Não concluídos</span>
-                </div>
               </div>
-            </div>
+            ))}
 
-            {/* Assistir Treinamento */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold mb-6 text-center">Assistir treinamento:</h3>
-              
-              <div className="relative w-48 h-48 mx-auto mb-4">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    stroke="#e5e7eb"
-                    strokeWidth="8"
-                    fill="transparent"
-                  />
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    stroke="#660099"
-                    strokeWidth="8"
-                    fill="transparent"
-                    strokeDasharray={`${(completedTraining / totalTraining) * 251.2} 251.2`}
-                    className="transition-all duration-500"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-700">
-                      {Math.round((completedTraining / totalTraining) * 100)}%
-                    </div>
-                  </div>
+            {/* Card para adicionar nova tarefa */}
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow-md p-6 border-2 border-dashed border-purple-300 flex items-center justify-center min-h-[200px]">
+              <button
+                onClick={() => setShowTaskModal(true)}
+                className="flex flex-col items-center gap-3 text-purple-600 hover:text-purple-800 transition-colors"
+              >
+                <div className="w-12 h-12 rounded-full bg-purple-200 flex items-center justify-center">
+                  <UserPlus size={24} />
                 </div>
-              </div>
-              
-              <div className="flex justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-purple-600"></div>
-                  <span>Concluídos</span>
+                <div className="text-center">
+                  <div className="font-semibold">Criar Nova Tarefa</div>
+                  <div className="text-sm text-purple-500">Clique para adicionar</div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-gray-300"></div>
-                  <span>Não concluídos</span>
-                </div>
-              </div>
+              </button>
             </div>
           </div>
         </div>
@@ -423,8 +490,8 @@ const DashboardGestor: React.FC = () => {
 
       {/* Modal para Nova Tarefa */}
       {showTaskModal && (
-        <div className="fixed inset-0 bg-black/50  flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold mb-4 text-purple-900">Nova Tarefa</h3>
             
             <div className="space-y-4">
@@ -443,20 +510,60 @@ const DashboardGestor: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Funcionário *
+                  Funcionários * (Selecione um ou mais)
                 </label>
-                <select
-                  value={newTask.idFuncionario}
-                  onChange={(e) => setNewTask({...newTask, idFuncionario: Number(e.target.value)})}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                >
-                  <option value={0}>Selecione um funcionário</option>
+                
+                {/* Botões de ação */}
+                <div className="flex gap-2 mb-3">
+                  <button
+                    type="button"
+                    onClick={selectAllEmployees}
+                    className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    Selecionar Todos
+                  </button>
+                  <button
+                    type="button"
+                    onClick={clearEmployeeSelection}
+                    className="px-3 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
+                  >
+                    Limpar Seleção
+                  </button>
+                </div>
+
+                {/* Lista de funcionários com checkboxes */}
+                <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-3 space-y-2">
                   {teamMembers.map((member) => (
-                    <option key={member.id} value={member.id}>
-                      {member.name} - {member.role}
-                    </option>
+                    <label key={member.id} className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                      <input
+                        type="checkbox"
+                        checked={selectedEmployees.includes(member.id)}
+                        onChange={() => toggleEmployeeSelection(member.id)}
+                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                      />
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-gray-900">{member.name}</div>
+                        <div className="text-xs text-gray-500">{member.role}</div>
+                      </div>
+                      <div className={`w-3 h-3 rounded-full ${
+                        member.status === 'active' ? 'bg-green-400' : 'bg-gray-400'
+                      }`}></div>
+                    </label>
                   ))}
-                </select>
+                </div>
+
+                {/* Resumo da seleção */}
+                {selectedEmployees.length > 0 && (
+                  <div className="mt-2 p-2 bg-purple-50 rounded text-sm">
+                    <strong>{selectedEmployees.length} funcionário(s) selecionado(s):</strong>
+                    <div className="text-purple-700">
+                      {selectedEmployees
+                        .map(id => teamMembers.find(m => m.id === id)?.name)
+                        .filter(Boolean)
+                        .join(', ')}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>

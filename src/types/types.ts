@@ -27,6 +27,13 @@ export interface Treinamento {
   descricao : string
   cargaHoraria : number
   categoria : string
+  dataInicio: Date
   dataFim : Date
   idFuncionario : number
+}
+
+export interface TarefaFuncionario {
+  id_tarefa : number
+  id_funcionario : number
+  status_tarefa : number
 }
