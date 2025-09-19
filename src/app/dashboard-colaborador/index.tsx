@@ -60,11 +60,11 @@ export default function DashboardColaborador() {
         },
         {
             name: "Lucas Pasqualini",
-            profession: "Dev Master",
+            profession: "Back-end",
         },
         {
             name: "Silvio Toshiaki",
-            profession: "Piranha",
+            profession: "QA",
         },
         {
             name: "Pietro de Paula",
@@ -154,15 +154,18 @@ export default function DashboardColaborador() {
                             variant="responsive"  
                             className="hover:scale-105 transition-transform duration-300"
                         >
-                            <div className="max-h-[250px] min-h-[255px] text-center space-y-3 min-w-[100px]">
-                                <h5 className="text-sm font-semibold underline text-green-600">
-                                    Concluidas: ({concluidas.length})
-                                </h5>
-                                <ul className="text-xs space-y-1">
-                                    {naoConcluidas.map((atividade) => (
-                                        <li key={atividade.id} className="flex items-center gap-2">
-                                            <span>○</span>
-                                            {atividade.nome}
+                            <div className="max-h-[250px] min-h-[255px] text-center space-y-2 min-w-[100px] p-2">
+                                <div className="bg-green-100 rounded-lg py-1 px-3">
+                                    <h5 className="text-sm font-semibold flex items-center justify-center">
+                                        <span className="mr-1">✓</span> 
+                                        Concluídas <span className="ml-1">{concluidas.length}</span>
+                                    </h5>
+                                </div>
+                                <ul className="text-xs space-y-1 mt-2 overflow-auto max-h-[190px]">
+                                    {concluidas.map((atividade) => (
+                                        <li key={atividade.id} className="flex items-center gap-1 py-1 text-left border-b border-gray-100">
+                                            <span className="text-green-600">✓</span>
+                                            <span>{atividade.nome}</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -173,15 +176,18 @@ export default function DashboardColaborador() {
                             variant="responsive"  
                             className="hover:scale-105 transition-transform duration-300"
                         >
-                            <div className="max-h-[250px] min-h-[255px] text-center space-y-3 min-w-[100px]">
-                                <h5 className="text-sm font-semibold underline text-orange-600">
-                                    Pendentes ({naoConcluidas.length})
-                                </h5>
-                                <ul className="text-xs space-y-1">
+                            <div className="max-h-[250px] min-h-[255px] text-center space-y-2 min-w-[100px] p-2">
+                                <div className="bg-orange-100 rounded-lg py-1 px-3">
+                                    <h5 className="text-sm font-semibold flex items-center justify-center">
+                                        <span className="mr-1">○</span> 
+                                        Pendentes <span className="ml-1">{naoConcluidas.length}</span>
+                                    </h5>
+                                </div>
+                                <ul className="text-xs space-y-1 mt-2 overflow-auto max-h-[190px]">
                                     {naoConcluidas.map((atividade) => (
-                                        <li key={atividade.id} className="flex items-center gap-2">
+                                        <li key={atividade.id} className="flex items-center gap-1 py-1 text-left border-b border-gray-100">
                                             <span className="text-orange-500">○</span>
-                                            {atividade.nome}
+                                            <span>{atividade.nome}</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -192,10 +198,25 @@ export default function DashboardColaborador() {
                             variant="responsive"  
                             className="hover:scale-105 transition-transform duration-300"
                         >
-                            <div className="max-h-[250px] min-h-[255px] text-center space-y-3 min-w-[100px] flex flex-col justify-between">
-                                <h5 className="text-sm font-light underline">Simulador de projetos</h5>
-                                <p className="text-xs font-semibold">Desafios com a cara da Vivo? Use seu talento para inovar e simplificar, do nosso jeito!</p>
-                                <p className="text-xs">Desafio 01: Desafio Básico de QA: "O Cadastro Simplificado Vivo". Clique e baixe o arquivo <a className="underline font-semibold" href="#">aqui</a></p>
+                            <div className="max-h-[250px] min-h-[255px] text-center space-y-2 min-w-[100px] flex flex-col justify-between p-2">
+                                <div className="bg-purple-100 rounded-lg py-1 px-3">
+                                    <h5 className="text-sm font-semibold flex items-center justify-center">
+                                        Simulador de projetos
+                                    </h5>
+                                </div>
+                                
+                                <div className="my-2 px-1">
+                                    <p className="text-xs">Desafios com a cara da Vivo? Use seu talento para inovar e simplificar, do nosso jeito!</p>
+                                </div>
+                                
+                                <div className="text-left p-1">
+                                    <p className="text-xs">
+                                        Desafio 01: Desafio Básico de QA: "O Cadastro Simplificado Vivo"
+                                    </p>
+                                    <a className="mt-2 inline-block bg-[#660099] text-white text-xs py-1.5 px-4 rounded-md font-medium" href="#">
+                                        Baixar Arquivo
+                                    </a>
+                                </div>
                             </div>
                         </Container>
                     </div>

@@ -22,7 +22,7 @@ export default function Chat() {
     setMessages([
       {
         id: 1,
-        text: "Olá! Eu sou o Vitu, assistente virtual da Vivo! 😊\n\nComo posso te ajudar hoje? Posso esclarecer dúvidas sobre:\n🎵 Benefícios como Vivo Play e Vivo Music\n📞 Atendimento e suporte\n\nO que você gostaria de saber?",
+        text: "Olá! Eu sou o Vitu, assistente virtual da Vivo! 😊\n\nComo posso te ajudar hoje?",
         sender: 'bot',
         timestamp: new Date()
       }
