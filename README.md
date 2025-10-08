@@ -1,54 +1,71 @@
-# React + TypeScript + Vite
+# Challenge Vivo 2025
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Um front-end moderno em **React + TypeScript** utilizando **Vite** para a interface de onboarding e gestão de tarefas da Vivo. Este projeto contém componentes reutilizáveis, layout responsivo e integração básica com APIs. O objetivo é oferecer uma experiência intuitiva tanto para colaboradores quanto para gestores.
 
-Currently, two official plugins are available:
+## 🚀 Funcionalidades Principais
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Painel do Colaborador:** Veja suas tarefas, acompanhe o progresso e interaja com treinamentos.
+- **Painel do Gestor:** Crie e visualize tarefas, gerencie treinamentos e acompanhe o desempenho da equipe.
+- **Componentes Reutilizáveis:** Navbar, Footer, Card, Container, Chat e outros elementos prontos para uso.
+- **Integração HTTP:** Comunicação via Axios, centralizada em `lib/api.ts`.
+- **Layout Responsivo:** Desenvolvido com Tailwind CSS para se adaptar a qualquer dispositivo.
 
-## Expanding the ESLint configuration
+## 🛠️ Tecnologias Utilizadas
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- [React](https://react.dev/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Vite](https://vitejs.dev/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Axios](https://axios-http.com/)
+- [Node.js](https://nodejs.org/) / npm
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## 📁 Estrutura do Projeto
+
+```
+├── app         # Páginas principais (dashboard, início, erro, etc.)
+├── components  # Componentes reutilizáveis
+├── lib         # Cliente HTTP e helpers (ex.: api.ts)
+├── router      # Configuração de rotas
+├── public      # Assets públicos (imagens, ícones)
+├── index.html  # HTML principal da aplicação
+├── vite.config.ts # Configuração do Vite
+├── package.json   # Dependências e scripts
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## ⚡ Como Executar
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1. **Pré-requisitos:**  
+   - Node.js **16+**
+   - npm, yarn ou pnpm
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+2. **Instale as dependências:**
+   ```bash
+   npm install
+   # ou
+   yarn
+   # ou
+   pnpm install
+   ```
+
+3. **Execute o projeto:**
+   ```bash
+   npm run dev
+   ```
+
+4. **Acesse no navegador:**  
+   Normalmente em [http://localhost:5173](http://localhost:5173)
+
+## 📝 Observações
+
+- O projeto é apenas a UI e utiliza APIs simuladas/localizadas no diretório `lib`.
+- Para integração real, adapte as URLs e métodos conforme sua API.
+- O layout é responsivo e pronto para ser customizado conforme necessidade.
+
+## 📌 Contribuição
+
+Sinta-se à vontade para abrir Issues ou Pull Requests!  
+Sugestões, melhorias e correções são muito bem-vindas.
+
+---
+
+**Desenvolvido para o challenge Vivo 2025.**
