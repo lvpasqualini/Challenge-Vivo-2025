@@ -166,11 +166,11 @@ const DashboardGestor: React.FC = () => {
     descricao: '',
     cargaHoraria: 0,
     categoria: '',
+    dataInicio: new Date(),
     dataFim: new Date(),
     idFuncionario: 0
   });
 
-  // Função para criar nova tarefa
   const handleCreateTask = async () => {
     if (!newTask.descricao || selectedEmployees.length === 0) {
       alert('Por favor, preencha todos os campos obrigatórios e selecione pelo menos um funcionário!');
@@ -179,31 +179,19 @@ const DashboardGestor: React.FC = () => {
 
     try {
       setLoading(true);
-      console.log('=== INICIANDO CRIAÇÃO DE TAREFA ===');
-      console.log('Dados da tarefa original:', newTask);
-      console.log('Funcionários selecionados:', selectedEmployees);
-      
-      // Primeiro, criar a tarefa da forma tradicional (com o primeiro funcionário selecionado como responsável principal)
+    
       const tarefaParaCriar = {
         ...newTask,
         idFuncionario: selectedEmployees[0] // Primeiro funcionário como responsável principal
       };
-      
-      console.log('Etapa 1: Criando tarefa principal...');
-      console.log('Dados da tarefa a ser criada:', tarefaParaCriar);
-      
+    
       const response = await createTarefa(tarefaParaCriar);
-      console.log('✅ Tarefa principal criada com sucesso:', response);
       
       // Verificar se obtivemos um ID válido
       const tarefaId = response?.id || response;
       if (!tarefaId) {
         throw new Error('ID da tarefa não foi retornado pelo servidor');
       }
-      console.log('ID da tarefa obtido:', tarefaId);
-      
-      // Etapa 2: Criar os relacionamentos TarefaFuncionario para TODOS os funcionários selecionados
-      console.log('Etapa 2: Criando relacionamentos TarefaFuncionario...');
       const associacoes = [];
       
       for (let i = 0; i < selectedEmployees.length; i++) {
@@ -211,42 +199,32 @@ const DashboardGestor: React.FC = () => {
         const tarefaFuncionario = {
           id_tarefa: tarefaId,
           id_funcionario: funcionarioId,
-          status_tarefa: 0 // 0 = não iniciada, 1 = em progresso, 2 = concluída
+          status_tarefa: 0 
         };
         
         console.log(`Criando relacionamento ${i + 1}/${selectedEmployees.length}:`, tarefaFuncionario);
         
         try {
           const associacao = await createTarefaFuncionario(tarefaFuncionario);
-          console.log(`✅ Relacionamento ${i + 1} criado:`, associacao);
           associacoes.push(associacao);
         } catch (assocError: any) {
           console.error(`❌ Erro no relacionamento ${i + 1}:`, assocError);
-          // Não falhar completamente se um relacionamento falhar
-          console.warn(`Continuando apesar do erro no relacionamento com funcionário ${funcionarioId}`);
         }
       }
-      
-      console.log(`✅ ${associacoes.length}/${selectedEmployees.length} relacionamentos criados com sucesso`);
-      
-      // Recarregar a lista de tarefas do backend
+    
       await loadTasksFromBackend();
       
       setShowTaskModal(false);
       setNewTask({ descricao: '', dataFim: new Date().toISOString().split('T')[0], idFuncionario: 0 });
       setSelectedEmployees([]);
       
-      console.log('=== TAREFA E RELACIONAMENTOS CRIADOS COM SUCESSO ===');
-      alert(`✅ Tarefa criada com sucesso!\n• Tarefa ID: ${tarefaId}\n• Atribuída a ${selectedEmployees.length} funcionário(s)\n• Relacionamentos criados: ${associacoes.length}/${selectedEmployees.length}`);
     } catch (error: any) {
-      console.error('=== ERRO NA CRIAÇÃO DA TAREFA ===');
       console.error('Erro completo:', error);
       console.error('Stack trace:', error?.stack);
       
       let errorMessage = 'Erro ao criar tarefa: ';
       
       if (error.response) {
-        // Erro da API
         console.error('Erro da API:', error.response);
         console.error('Status:', error.response.status);
         console.error('Data:', error.response.data);
@@ -261,11 +239,9 @@ const DashboardGestor: React.FC = () => {
           errorMessage += `Erro HTTP ${error.response.status}: ${error.response.data?.message || error.message}`;
         }
       } else if (error.request) {
-        // Erro de rede
         console.error('Erro de rede:', error.request);
         errorMessage += 'Erro de conexão. Verifique se o servidor está rodando na porta 8080.';
       } else {
-        // Outro erro
         errorMessage += error?.message || 'Erro desconhecido.';
       }
       
@@ -295,6 +271,7 @@ const DashboardGestor: React.FC = () => {
         descricao: '', 
         cargaHoraria: 0, 
         categoria: '', 
+        dataInicio: new Date(),
         dataFim: new Date(), 
         idFuncionario: 0 
       });
@@ -320,7 +297,6 @@ const DashboardGestor: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-3">
           <div className="flex items-center justify-center">
             <div></div>
@@ -335,9 +311,7 @@ const DashboardGestor: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Panel - Task Management */}
           <div className="lg:col-span-1">
-            {/* Ler Formulário */}
             {tasks.map((task) => (
                <div key={task.id} className="bg-white rounded-lg shadow-md p-6 mb-6">
               <div className="bg-[#660099] text-white p-3 rounded-t-lg -m-6 mb-4">
@@ -359,9 +333,6 @@ const DashboardGestor: React.FC = () => {
             </div>
             ))}
 
-            
-
-            {/* New Task Button */}
             <div className="space-y-3">
               <button 
                 onClick={() => setShowTaskModal(true)}
@@ -381,8 +352,6 @@ const DashboardGestor: React.FC = () => {
             </div>
           </div>
 
-
-          {/* Right Panel - Team Members */}
           <div className="lg:col-span-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {teamMembers.map((member) => (
@@ -416,12 +385,10 @@ const DashboardGestor: React.FC = () => {
           </div>
         </div>
 
-        {/* Relatório */}
         <div className="mt-12">
           <h2 className="text-2xl font-bold text-center mb-8 text-gray-800">Relatório Geral:</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {/* Cards dinâmicos das tarefas criadas */}
             {tasks.map((task) => (
               <div key={task.id} className="bg-white rounded-lg shadow-md p-6">
                 <h3 className="text-lg font-semibold mb-6 text-center">{task.description}</h3>
@@ -469,7 +436,6 @@ const DashboardGestor: React.FC = () => {
               </div>
             ))}
 
-            {/* Card para adicionar nova tarefa */}
             <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow-md p-6 border-2 border-dashed border-purple-300 flex items-center justify-center min-h-[200px]">
               <button
                 onClick={() => setShowTaskModal(true)}
@@ -488,7 +454,6 @@ const DashboardGestor: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal para Nova Tarefa */}
       {showTaskModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
@@ -513,7 +478,6 @@ const DashboardGestor: React.FC = () => {
                   Funcionários * (Selecione um ou mais)
                 </label>
                 
-                {/* Botões de ação */}
                 <div className="flex gap-2 mb-3">
                   <button
                     type="button"
@@ -531,7 +495,6 @@ const DashboardGestor: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Lista de funcionários com checkboxes */}
                 <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-3 space-y-2">
                   {teamMembers.map((member) => (
                     <label key={member.id} className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
@@ -552,7 +515,6 @@ const DashboardGestor: React.FC = () => {
                   ))}
                 </div>
 
-                {/* Resumo da seleção */}
                 {selectedEmployees.length > 0 && (
                   <div className="mt-2 p-2 bg-purple-50 rounded text-sm">
                     <strong>{selectedEmployees.length} funcionário(s) selecionado(s):</strong>
@@ -599,7 +561,6 @@ const DashboardGestor: React.FC = () => {
         </div>
       )}
 
-      {/* Modal para Novo Treinamento */}
       {showTrainingModal && (
         <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">

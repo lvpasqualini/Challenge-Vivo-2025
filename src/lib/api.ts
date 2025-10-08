@@ -12,7 +12,6 @@ const api = axios.create({
   withCredentials: false,
 });
 
-// Interceptor para requests
 api.interceptors.request.use(
   (config) => {
     console.log('Request:', config.method?.toUpperCase(), config.url);
@@ -24,7 +23,6 @@ api.interceptors.request.use(
   }
 );
 
-// Interceptor para responses
 api.interceptors.response.use(
   (response) => {
     console.log('Response:', response.status, response.config.url);
@@ -62,8 +60,6 @@ export const getAllTarefas = async () => {
 
 export const createTarefa = async (data: Tarefa) => {
   try {
-    // Usar o funcionário selecionado, mas garantir que seja um ID válido
-    // Se for 0 ou inválido, usar o ID 8 que sabemos que funciona
     const funcionarioId = data.idFuncionario > 0 ? data.idFuncionario : 8;
     
     const tarefa = {
@@ -72,10 +68,7 @@ export const createTarefa = async (data: Tarefa) => {
       dataFim: "10/06/2025", 
       idFuncionario: funcionarioId
     };
-    
-    console.log('Enviando para API:', tarefa);
     const response = await api.post(`/dashboard/tarefas/create-tarefa`, tarefa);
-    console.log('✅ Tarefa criada com sucesso! Resposta:', response.data);
     
     return response.data;
   } catch (error: any) {
@@ -91,9 +84,7 @@ export const getTreinamento = async (id: number) => {
 
 export const getAllTreinamentos = async () => {
   try {
-    console.log('Buscando todos os treinamentos...');
     const response = await api.get(`/dashboard/treinamentos/get-all-treinamentos`);
-    console.log('Treinamentos recebidos:', response.data);
     return response.data;
   } catch (error: any) {
     console.error('Erro ao buscar treinamentos:', error);
@@ -103,10 +94,8 @@ export const getAllTreinamentos = async () => {
 
 export const createTreinamento = async (data: Treinamento) => {
   try {
-    // Usar o funcionário selecionado, mas garantir que seja um ID válido
     const funcionarioId = data.idFuncionario > 0 ? data.idFuncionario : 8;
     
-    // Converter dataFim para formato brasileiro DD/MM/AAAA
     let dataFim = "10/06/2025"; // Padrão
     if (data.dataFim instanceof Date) {
       dataFim = data.dataFim.toLocaleDateString('pt-BR');
@@ -124,10 +113,7 @@ export const createTreinamento = async (data: Treinamento) => {
       dataFim: dataFim,
       idFuncionario: funcionarioId,
     };
-    
-    console.log('Enviando treinamento para API:', treinamento);
     const response = await api.post(`/dashboard/treinamentos/create-treinamento`, treinamento);
-    console.log('✅ Treinamento criado com sucesso! Resposta:', response.data);
     
     return response.data;
   } catch (error: any) {
@@ -145,10 +131,8 @@ export const createTarefaFuncionario = async (data: TarefaFuncionario) => {
     const tarefaFuncionario = {
       ...data
     };
-    console.log('Enviando TarefaFuncionario para API:', tarefaFuncionario);
     const response = await api.post(`/dashboard/tarefa-funcionario`, tarefaFuncionario);
-    console.log('Resposta TarefaFuncionario da API:', response.data);
-    
+
     return response.data;
   } catch (e: any) {
     console.error('Erro na função createTarefaFuncionario:', e);

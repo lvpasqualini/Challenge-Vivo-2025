@@ -15,10 +15,9 @@ export default function Chat() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Inicializar o chat quando o componente monta
+  
   useEffect(() => {
     inicializaChat();
-    // Adicionar mensagem de boas-vindas
     setMessages([
       {
         id: 1,
@@ -29,7 +28,6 @@ export default function Chat() {
     ]);
   }, []);
 
-  // Auto scroll para a última mensagem
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -53,7 +51,6 @@ export default function Chat() {
     setIsLoading(true);
 
     try {
-      // Enviar mensagem para o Gemini AI
       const botResponse = await enviarMensagem(inputMessage);
       
       const botMessage: Message = {
@@ -87,14 +84,12 @@ export default function Chat() {
 
   return (
     <div className="fixed bottom-5 right-5 z-50">
-      {/* Botão do chat */}
       <div 
         className={`w-15 h-15 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center cursor-pointer shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl relative ${
           isOpen ? 'bg-red-500' : ''
         }`}
         onClick={toggleChat}
       >
-        {/* Indicador de notificação pulsante */}
         <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full animate-pulse"></div>
         
         {isOpen ? (
@@ -108,7 +103,6 @@ export default function Chat() {
         )}
       </div>
 
-      {/* Janela do chat */}
       {isOpen && (
         <div className="absolute bottom-20 right-0 w-80 h-96 bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
           {/* Header */}
@@ -122,7 +116,6 @@ export default function Chat() {
             </button>
           </div>
 
-          {/* Área de mensagens */}
           <div className="flex-1 p-4 overflow-y-auto bg-gray-50 space-y-3">
             {messages.map((message) => (
               <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -144,7 +137,6 @@ export default function Chat() {
               </div>
             ))}
             
-            {/* Indicador de loading */}
             {isLoading && (
               <div className="flex justify-start">
                 <div className="bg-white text-gray-800 border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-2">
@@ -163,7 +155,6 @@ export default function Chat() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input de mensagem */}
           <div className="p-4 bg-white border-t border-gray-200 flex gap-2">
             <input
               type="text"
